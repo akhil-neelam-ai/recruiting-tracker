@@ -1,99 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useActionState } from "react";
+import { login, signup } from "@/app/auth/actions";
+import { type AuthField, type AuthFormState } from "@/lib/auth-fields";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
-type Mode = "login" | "signup";
-
-function friendlyAuthError(message: string) {
-  const lower = message.toLowerCase();
-  if (lower.includes("invalid login credentials")) {
-    return "That email and password don't match.";
-  }
-  if (lower.includes("already registered") || lower.includes("already been registered")) {
-    return "An account with that email already exists. Log in instead.";
-  }
-  return message;
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <span className="field-error" id={id} role="alert">
+      {message}
+    </span>
+  );
 }
 
-export function AuthForm({ mode }: { mode: Mode }) {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [pending, setPending] = useState(false);
+export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+  const action = mode === "login" ? login : signup;
+  const [state, formAction, pending] = useActionState<AuthFormState, FormData>(action, { error: "" });
+  const draft = state.draft;
+  const errors = state.fieldErrors ?? {};
   const configured = hasSupabaseEnv();
-
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    setNotice("");
-
-    if (!email.trim()) {
-      setError("Enter your email.");
-      return;
-    }
-    if (!email.includes("@")) {
-      setError("That email doesn't look right.");
-      return;
-    }
-    if (!password) {
-      setError("Enter a password.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Use at least 6 characters.");
-      return;
-    }
-    if (mode === "signup" && password !== confirm) {
-      setError("Those passwords don't match.");
-      return;
-    }
-
-    setPending(true);
-    const supabase = createClient();
-
-    if (mode === "login") {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      setPending(false);
-      if (signInError) {
-        setError(friendlyAuthError(signInError.message));
-        return;
-      }
-      router.push("/");
-      router.refresh();
-      return;
-    }
-
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-    });
-    setPending(false);
-    if (signUpError) {
-      setError(friendlyAuthError(signUpError.message));
-      return;
-    }
-    if (!data.session) {
-      setNotice(
-        "Check your email to confirm the account, then log in. For the class demo, turn off Confirm email in Supabase so signup signs you in right away.",
-      );
-      return;
-    }
-    router.push("/");
-    router.refresh();
-  }
+  const invalid = (field: AuthField) => (errors[field] ? true : undefined);
 
   return (
-    <form onSubmit={onSubmit}>
+    <form action={formAction} noValidate key={draft ? `${draft.email}|${draft.password}|${draft.confirm}` : "clean"}>
       {!configured ? (
         <p className="notice" role="status">
           Add your Supabase URL and publishable key to .env.local, then restart the dev server.
@@ -102,13 +33,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
       <label>
         Email
         <input
-          type="email"
+          type="text"
           name="email"
           autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
+          inputMode="email"
+          defaultValue={draft?.email ?? ""}
+          aria-invalid={invalid("email")}
+          aria-describedby={errors.email ? "auth-email-error" : undefined}
         />
+        <FieldError id="auth-email-error" message={errors.email} />
       </label>
       <label>
         Password
@@ -116,11 +49,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
           type="password"
           name="password"
           autoComplete={mode === "login" ? "current-password" : "new-password"}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-          minLength={6}
+          defaultValue={draft?.password ?? ""}
+          aria-invalid={invalid("password")}
+          aria-describedby={errors.password ? "auth-password-error" : undefined}
         />
+        <FieldError id="auth-password-error" message={errors.password} />
       </label>
       {mode === "signup" ? (
         <label>
@@ -129,24 +62,24 @@ export function AuthForm({ mode }: { mode: Mode }) {
             type="password"
             name="confirm"
             autoComplete="new-password"
-            value={confirm}
-            onChange={(event) => setConfirm(event.target.value)}
-            required
-            minLength={6}
+            defaultValue={draft?.confirm ?? ""}
+            aria-invalid={invalid("confirm")}
+            aria-describedby={errors.confirm ? "auth-confirm-error" : undefined}
           />
+          <FieldError id="auth-confirm-error" message={errors.confirm} />
         </label>
       ) : null}
-      {error ? (
+      {state.error ? (
         <p className="error" role="alert">
-          {error}
+          {state.error}
         </p>
       ) : null}
-      {notice ? (
+      {state.notice ? (
         <p className="notice" role="status">
-          {notice}
+          {state.notice}
         </p>
       ) : null}
-      <button type="submit" disabled={pending || !configured}>
+      <button type="submit" disabled={pending}>
         {pending ? "Working…" : mode === "login" ? "Log in" : "Create account"}
       </button>
       <p className="switch">

@@ -25,7 +25,22 @@ export type CompanyDraft = {
   status: string;
 };
 
-export type FormState = { error: string; draft?: CompanyDraft };
+export type CompanyField = "name" | "website" | "status";
+
+export type FormState = {
+  error: string;
+  fieldErrors?: Partial<Record<CompanyField, string>>;
+  draft?: CompanyDraft;
+};
+
+export function isHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 export function draftFromForm(formData: FormData): CompanyDraft {
   return {
@@ -44,23 +59,34 @@ function optionalText(formData: FormData, key: string) {
 
 export function parseCompanyForm(
   formData: FormData,
-): { ok: true; value: CompanyInput } | { ok: false; error: string } {
+):
+  | { ok: true; value: CompanyInput }
+  | { ok: false; fieldErrors: Partial<Record<CompanyField, string>> } {
+  const fieldErrors: Partial<Record<CompanyField, string>> = {};
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { ok: false, error: "Enter a company name." };
+  if (!name) fieldErrors.name = "Enter a company name.";
 
-  const statusRaw = String(formData.get("status") ?? "Researching");
-  const status = COMPANY_STATUSES.includes(statusRaw as CompanyStatus)
-    ? (statusRaw as CompanyStatus)
-    : "Researching";
+  const website = String(formData.get("website") ?? "").trim();
+  if (website && !isHttpUrl(website)) {
+    fieldErrors.website = "Enter a full website, like https://anthropic.com.";
+  }
+
+  const statusRaw = String(formData.get("status") ?? "").trim();
+  if (!statusRaw) fieldErrors.status = "Choose a status.";
+  else if (!COMPANY_STATUSES.includes(statusRaw as CompanyStatus)) {
+    fieldErrors.status = "Choose a status from the list.";
+  }
+
+  if (Object.keys(fieldErrors).length > 0) return { ok: false, fieldErrors };
 
   return {
     ok: true,
     value: {
       name,
-      website: optionalText(formData, "website"),
+      website: website || null,
       description: optionalText(formData, "description"),
       source: optionalText(formData, "source"),
-      status,
+      status: statusRaw as CompanyStatus,
     },
   };
 }
