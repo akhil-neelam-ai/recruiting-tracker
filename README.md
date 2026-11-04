@@ -1,2 +1,3 @@
 # recruiting-tracker
-Solo app: recruiting tracker for companies, contacts, interactions, reminders
+
+A recruiting tracker for companies, contacts, interactions, and follow-up reminders, built for UC Berkeley Intro to Code (solo app).
