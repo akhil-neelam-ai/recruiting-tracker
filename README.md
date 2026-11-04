@@ -24,7 +24,7 @@ npm install
 npm run dev
 ```
 
-6. Open http://localhost:3000. Logged-out visitors land on `/login`. Create an account at `/signup`, then log out from the home page.
+6. Open http://localhost:3000. Logged-out visitors land on `/login`. Create an account at `/signup`. The home page lists your companies. Add one, open it, edit it, and delete it after the "Are you sure?" check. Log out from the header.
 
 ## Tests
 
