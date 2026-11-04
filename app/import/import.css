@@ -1,0 +1,26 @@
+.preview {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  background: var(--card);
+}
+
+.preview th,
+.preview td {
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.preview .bad td {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+@media (max-width: 640px) {
+  .preview {
+    display: block;
+    overflow-x: auto;
+  }
+}

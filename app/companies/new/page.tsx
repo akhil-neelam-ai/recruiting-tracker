@@ -16,7 +16,10 @@ export default async function NewCompanyPage() {
         <Link href="/">Back to companies</Link>
       </p>
       <h1>Add a company</h1>
-      <p className="lede">Name, website, description, source, and where it sits in your pipeline.</p>
+      <p className="lede">
+        Name, website, description, source, and where it sits in your pipeline. Or{" "}
+        <Link href="/import">import a CSV</Link>.
+      </p>
       <CompanyForm action={createCompany} submitLabel="Save company" />
     </AppShell>
   );
