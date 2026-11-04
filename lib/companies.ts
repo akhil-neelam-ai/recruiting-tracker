@@ -42,6 +42,29 @@ export function isHttpUrl(value: string) {
   }
 }
 
+export const WEBSITE_ERROR = "Enter a website, like meta.com.";
+
+/** Trim the text and add https:// when the person left the scheme off. */
+export function normalizeWebsite(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+export function websiteFieldError(value: string) {
+  const website = normalizeWebsite(value);
+  if (!website) return null;
+  let hostname = "";
+  try {
+    hostname = new URL(website).hostname;
+  } catch {
+    hostname = "";
+  }
+  if (!isHttpUrl(website) || !hostname.includes(".")) return WEBSITE_ERROR;
+  return null;
+}
+
 export function draftFromForm(formData: FormData): CompanyDraft {
   return {
     name: String(formData.get("name") ?? ""),
@@ -66,10 +89,8 @@ export function parseCompanyForm(
   const name = String(formData.get("name") ?? "").trim();
   if (!name) fieldErrors.name = "Enter a company name.";
 
-  const website = String(formData.get("website") ?? "").trim();
-  if (website && !isHttpUrl(website)) {
-    fieldErrors.website = "Enter a full website, like https://anthropic.com.";
-  }
+  const website = normalizeWebsite(String(formData.get("website") ?? ""));
+  if (websiteFieldError(website)) fieldErrors.website = WEBSITE_ERROR;
 
   const statusRaw = String(formData.get("status") ?? "").trim();
   if (!statusRaw) fieldErrors.status = "Choose a status.";

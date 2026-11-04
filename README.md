@@ -2,6 +2,8 @@
 
 A recruiting tracker for companies, contacts, interactions, and follow-up reminders, built for UC Berkeley Intro to Code (solo app).
 
+Live app: https://recruitboard.vercel.app
+
 This branch signs a visitor up and logs them in with Supabase email and password. Row-level security keeps each account on its own rows.
 
 ## Tools
@@ -9,7 +11,7 @@ This branch signs a visitor up and logs them in with Supabase email and password
 - Next.js (App Router, TypeScript)
 - Supabase (Postgres and email/password auth)
 - Vitest
-- Vercel for hosting, once the project is connected
+- Vercel. Live app: https://recruitboard.vercel.app
 
 ## Run it locally
 

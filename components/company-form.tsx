@@ -48,7 +48,7 @@ export function CompanyForm({
         <input
           name="website"
           defaultValue={draft?.website ?? initial?.website ?? ""}
-          placeholder="https://"
+          placeholder="meta.com"
           aria-invalid={invalid("website")}
           aria-describedby={errors.website ? "company-website-error" : undefined}
         />
