@@ -139,6 +139,18 @@ button:disabled {
   line-height: 1.45;
 }
 
+.field-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+input[aria-invalid="true"],
+textarea[aria-invalid="true"],
+select[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
 .notice {
   background: #fff8e8;
   color: #713f12;
