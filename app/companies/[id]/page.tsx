@@ -20,13 +20,14 @@ export default async function CompanyDetailPage({
   if (!id) notFound();
 
   const { supabase, email } = await requireUser();
-  const [{ data }, { data: star }] = await Promise.all([
+  const [{ data }, { data: star }, { data: people }] = await Promise.all([
     supabase
       .from("companies")
       .select("id, name, website, description, source, status, created_at")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("stars").select("id").eq("company_id", id).maybeSingle(),
+    supabase.from("people").select("id, name, title").eq("company_id", id).order("name"),
   ]);
 
   if (!data) notFound();
@@ -64,6 +65,24 @@ export default async function CompanyDetailPage({
         <dt>Added</dt>
         <dd>{created || "—"}</dd>
       </dl>
+      <h2>People</h2>
+      <p className="back">
+        <Link href={`/people/new?company=${data.id}`}>Add a person</Link>
+      </p>
+      {people?.length ? (
+        <ul className="company-list">
+          {people.map((person) => (
+            <li key={person.id} className="company-item">
+              <Link className="company-row" href={`/people/${person.id}`}>
+                <strong>{person.name || "Untitled person"}</strong>
+                {person.title ? <span className="quiet">{person.title}</span> : null}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="quiet">No one here yet.</p>
+      )}
       <div className="actions">
         <StarButton
           companyId={data.id}
