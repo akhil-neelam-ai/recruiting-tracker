@@ -84,3 +84,4 @@ Save key prompts in prompts/<feature>.md on each branch and deploy after each me
 
 | Planned feature | Shipped / Changed / Cut | Status (Done/Backlogged) | Learning | What changed and why |
 |---|---|---|---|---|
+| PR #8, Spine 3 company CRUD | Shipped, changed | Done | I had a separate applications pipeline in mind, but schema.md has no applications table. A company row is the application, and it carries the pipeline status. | Delete asks "Are you sure?" before the row is removed. List, detail, create, edit, and delete all run as the logged-in user, so RLS (user_id = auth.uid()) shows only my companies. |
