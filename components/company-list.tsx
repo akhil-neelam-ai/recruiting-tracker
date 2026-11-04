@@ -1,23 +1,30 @@
 import Link from "next/link";
+import { CompanyFilters } from "@/components/company-filters";
 import { StarButton } from "@/components/star-button";
+import { listHref, type CompanyQuery } from "@/lib/company-query";
 
 export type CompanyListItem = {
   id: number;
   name: string | null;
   website: string | null;
   status: string | null;
+  created_at: string | null;
 };
 
 export function CompanyList({
   view,
+  query,
   companies,
   starredIds,
   error,
+  filtered,
 }: {
   view: "all" | "starred";
+  query: CompanyQuery;
   companies: CompanyListItem[];
   starredIds: Set<number>;
   error: boolean;
+  filtered: boolean;
 }) {
   const visible = view === "starred" ? companies.filter((company) => starredIds.has(company.id)) : companies;
 
@@ -32,10 +39,10 @@ export function CompanyList({
               : "Your recruiting pipeline. Star a company to keep it one click away."}
           </p>
           <nav className="view-switch" aria-label="Company lists">
-            <Link href="/" aria-current={view === "all" ? "page" : undefined}>
+            <Link href={listHref("/", query)} aria-current={view === "all" ? "page" : undefined}>
               All
             </Link>
-            <Link href="/starred" aria-current={view === "starred" ? "page" : undefined}>
+            <Link href={listHref("/starred", query)} aria-current={view === "starred" ? "page" : undefined}>
               Starred
             </Link>
           </nav>
@@ -44,6 +51,7 @@ export function CompanyList({
           Add a company
         </Link>
       </div>
+      <CompanyFilters view={view} query={query} />
       {error ? (
         <p className="error" role="alert">
           Couldn&apos;t load companies. Run supabase/migrations/0001_init.sql in the Supabase SQL editor,
@@ -71,7 +79,12 @@ export function CompanyList({
       ) : null}
       {!error && !visible.length ? (
         <div className="empty">
-          {view === "starred" ? (
+          {filtered ? (
+            <>
+              <p>No companies match that search.</p>
+              <p className="quiet">Try another name or status.</p>
+            </>
+          ) : view === "starred" ? (
             <>
               <p>No starred companies yet.</p>
               <p className="quiet">Star one from the full list.</p>
