@@ -1,4 +1,4 @@
-import { COMPANY_STATUSES, type CompanyStatus, isHttpUrl } from "./companies";
+import { COMPANY_STATUSES, type CompanyStatus, normalizeWebsite, websiteFieldError } from "./companies";
 
 export type CsvCompany = {
   name: string;
@@ -36,9 +36,8 @@ export function canonicalStatus(status: string) {
 
 export function validateCsvCompany(company: CsvCompany) {
   if (!company.name) return "Enter a company name.";
-  if (company.website && !isHttpUrl(company.website)) {
-    return "Enter a full website, like https://anthropic.com.";
-  }
+  const websiteError = websiteFieldError(company.website);
+  if (websiteError) return websiteError;
   if (company.status && canonicalStatus(company.status) === null) {
     return `Status must be one of: ${COMPANY_STATUSES.join(", ")}.`;
   }
@@ -48,7 +47,8 @@ export function validateCsvCompany(company: CsvCompany) {
 /** Row 1 is the header. The first data row is row 2. */
 export function reviewCsv(records: Record<string, unknown>[]): CsvReview[] {
   return records.map((record, index) => {
-    const company = companyFromRecord(record);
+    const parsed = companyFromRecord(record);
+    const company = { ...parsed, website: normalizeWebsite(parsed.website) };
     const status = canonicalStatus(company.status);
     return {
       row: index + 2,
