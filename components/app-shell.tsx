@@ -10,6 +10,7 @@ export function AppShell({ email, children }: { email?: string; children: ReactN
           <Link href="/">Recruiting tracker</Link>
         </p>
         <div className="bar-actions">
+          <Link href="/dashboard">Dashboard</Link>
           {email ? <span className="who">{email}</span> : null}
           <form action={logout}>
             <button type="submit">Log out</button>
