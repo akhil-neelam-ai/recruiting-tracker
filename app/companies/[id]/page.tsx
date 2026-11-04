@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { DeleteCompanyButton } from "@/components/delete-company";
+import { StarButton } from "@/components/star-button";
 import { companyId } from "@/lib/companies";
 import { requireUser } from "@/lib/session";
 
@@ -19,11 +20,14 @@ export default async function CompanyDetailPage({
   if (!id) notFound();
 
   const { supabase, email } = await requireUser();
-  const { data } = await supabase
-    .from("companies")
-    .select("id, name, website, description, source, status, created_at")
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data }, { data: star }] = await Promise.all([
+    supabase
+      .from("companies")
+      .select("id, name, website, description, source, status, created_at")
+      .eq("id", id)
+      .maybeSingle(),
+    supabase.from("stars").select("id").eq("company_id", id).maybeSingle(),
+  ]);
 
   if (!data) notFound();
 
@@ -61,6 +65,11 @@ export default async function CompanyDetailPage({
         <dd>{created || "—"}</dd>
       </dl>
       <div className="actions">
+        <StarButton
+          companyId={data.id}
+          starred={Boolean(star)}
+          name={data.name || "this company"}
+        />
         <Link className="button-link" href={`/companies/${data.id}/edit`}>
           Edit
         </Link>
